@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const nextConfig: NextConfig = {
   output: 'export',
   trailingSlash: true,
@@ -7,8 +9,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/EcoLedger' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/EcoLedger/' : '',
+  basePath: isProd ? '/EcoLedger' : '',
+  assetPrefix: isProd ? '/EcoLedger/' : '',
   eslint: {
     ignoreDuringBuilds: true,
   },
