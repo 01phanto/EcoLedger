@@ -76,9 +76,31 @@ export default function UploadPage() {
           };
           
           addUserProject(newProject);
-          console.log('Project with AI analysis added:', newProject);
+          console.log('✅ Project with AI analysis added to storage:', newProject);
+          console.log('📊 AI Scores - YOLO:', yoloScore.toFixed(1), '% NDVI:', ndviScore.toFixed(1), '% IoT:', iotScore.toFixed(1), '%');
+          console.log('🎯 Final Score:', finalScore.toFixed(1), '% Confidence:', newProject.aiResults.confidence);
+          
+          // Verify data was saved
+          const savedProjects = JSON.parse(localStorage.getItem('ecoledger_user_projects') || '[]');
+          console.log('✅ Verification: Total projects in storage:', savedProjects.length);
         } catch (error) {
-          console.error('Error adding project:', error);
+          console.error('❌ Error adding project:', error);
+          // Fallback: Save directly to localStorage
+          const existingProjects = JSON.parse(localStorage.getItem('ecoledger_user_projects') || '[]');
+          const fallbackProject = {
+            id: Date.now().toString(),
+            ngoName: formData.ngoName,
+            projectName: formData.projectName,
+            location: formData.location,
+            claimedTrees: parseInt(formData.claimedTrees),
+            description: formData.description,
+            status: 'Pending Verification',
+            submissionDate: new Date().toISOString(),
+            confidence: finalScore
+          };
+          existingProjects.push(fallbackProject);
+          localStorage.setItem('ecoledger_user_projects', JSON.stringify(existingProjects));
+          console.log('✅ Fallback: Project saved directly to localStorage');
         }
       }
     }, 3000);
@@ -351,15 +373,19 @@ export default function UploadPage() {
             <div className="space-y-4">
               <button
                 onClick={() => {
-                  // Use Next.js router for proper navigation
-                  window.location.href = '/';
+                  // Navigate to dashboard page with proper GitHub Pages basePath
+                  const basePath = window.location.hostname.includes('github.io') ? '/EcoLedger' : '';
+                  window.location.href = `${basePath}/dashboard`;
                 }}
                 className="w-full px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 font-bold shadow-lg transform hover:scale-105 transition-all duration-200 text-lg"
               >
                 ✅ Return to Dashboard
               </button>
               <button
-                onClick={() => window.location.href = '/admin'}
+                onClick={() => {
+                  const basePath = window.location.hostname.includes('github.io') ? '/EcoLedger' : '';
+                  window.location.href = `${basePath}/admin`;
+                }}
                 className="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
               >
                 🔍 Review in Admin Portal
