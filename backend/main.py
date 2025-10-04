@@ -26,7 +26,14 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS for production deployment
+CORS(app, origins=[
+    "https://01phanto.github.io",  # GitHub Pages
+    "http://localhost:3000",       # Local development
+    "http://localhost:3001",       # Local development alt
+    "*"                           # Allow all origins for demo
+])
 
 # Initialize AI model APIs
 tree_detector = TreeDetectionAPI()
@@ -254,6 +261,104 @@ def ledger_marketplace():
         logger.error(f"Marketplace query error: {str(e)}")
         return jsonify({"error": "Marketplace query failed", "details": str(e)}), 500
 
+@app.route('/api/reports', methods=['GET'])
+def get_reports():
+    """Get all verified project reports for admin dashboard"""
+    try:
+        # Mock data that matches the frontend ReportData interface
+        mock_reports = [
+            {
+                "id": "eco-001",
+                "ngo": "Mangrove Trust",
+                "projectName": "Sundarbans Restoration Phase 1",
+                "location": "Sundarbans, Bangladesh",
+                "trees": 950,
+                "claimedTrees": 950,
+                "ndvi": 0.8,
+                "iot": 0.9,
+                "score": "91%",
+                "credits": 10.6,
+                "status": "Verified",
+                "submissionDate": "2024-09-15",
+                "verificationDate": "2024-09-22",
+                "blockchainTx": "0x7f9b4c8a2d3e5f1a8b9c2d4e6f7a9b1c3d5e7f9a"
+            },
+            {
+                "id": "eco-002",
+                "ngo": "Green Earth Foundation", 
+                "projectName": "Coastal Mangrove Shield",
+                "location": "Kerala, India",
+                "trees": 1200,
+                "claimedTrees": 1180,
+                "ndvi": 0.75,
+                "iot": 0.85,
+                "score": "88%",
+                "credits": 12.1,
+                "status": "Verified",
+                "submissionDate": "2024-09-10",
+                "verificationDate": "2024-09-18",
+                "blockchainTx": "0x3a5b7c9d1e2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b"
+            },
+            {
+                "id": "eco-003",
+                "ngo": "Ocean Guardian NGO",
+                "projectName": "Coral Reef Mangrove Buffer",
+                "location": "Philippines",
+                "trees": 800,
+                "claimedTrees": 785,
+                "ndvi": 0.72,
+                "iot": 0.88,
+                "score": "85%",
+                "credits": 8.9,
+                "status": "Verified",
+                "submissionDate": "2024-09-05",
+                "verificationDate": "2024-09-14",
+                "blockchainTx": "0x9c1a3b5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b"
+            },
+            {
+                "id": "eco-004",
+                "ngo": "Climate Action Network",
+                "projectName": "Urban Mangrove Initiative", 
+                "location": "Mumbai, India",
+                "trees": 600,
+                "claimedTrees": 580,
+                "ndvi": 0.68,
+                "iot": 0.82,
+                "score": "82%",
+                "credits": 6.7,
+                "status": "Pending",
+                "submissionDate": "2024-09-20"
+            },
+            {
+                "id": "eco-005",
+                "ngo": "Sustainable Seas",
+                "projectName": "Mangrove Carbon Sink",
+                "location": "Vietnam",
+                "trees": 1500,
+                "claimedTrees": 1450,
+                "ndvi": 0.82,
+                "iot": 0.91,
+                "score": "93%",
+                "credits": 15.8,
+                "status": "Verified",
+                "submissionDate": "2024-08-28",
+                "verificationDate": "2024-09-08",
+                "blockchainTx": "0x2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a"
+            }
+        ]
+        
+        logger.info(f"Reports endpoint accessed, returning {len(mock_reports)} reports")
+        return jsonify({
+            "success": True,
+            "reports": mock_reports,
+            "total": len(mock_reports),
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        logger.error(f"Reports endpoint error: {str(e)}")
+        return jsonify({"error": "Failed to fetch reports", "details": str(e)}), 500
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Endpoint not found"}), 404
@@ -263,4 +368,10 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
+    # Development server
     app.run(debug=True, host='0.0.0.0', port=5000)
+else:
+    # Production server (Gunicorn will use this)
+    # Configure for production
+    import logging
+    logging.basicConfig(level=logging.INFO)
