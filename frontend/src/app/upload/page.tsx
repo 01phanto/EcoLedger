@@ -178,12 +178,23 @@ export default function UploadPage() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Project Submitted Successfully!</h1>
             <p className="text-gray-600 mb-6">Your project is now in the admin review queue</p>
-            <button
-              onClick={() => window.location.href = '/'}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              Return to Dashboard
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={() => window.location.href = '/admin'}
+                className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              >
+                🔍 Go to Admin Review Portal
+              </button>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Return to Dashboard
+              </button>
+              <p className="text-sm text-gray-500 text-center">
+                📋 Next: Admin will verify your data → 🔗 Blockchain ledger → 💱 Trade carbon credits
+              </p>
+            </div>
           </div>
         </div>
       </div>

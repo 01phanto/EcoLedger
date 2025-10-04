@@ -49,114 +49,104 @@ export default function DashboardPage() {
 
   const loadDashboardData = async () => {
     try {
-      // Load real user projects and activities
-      const userProjects = JSON.parse(localStorage.getItem('userProjects') || '[]');
-      const approvedProjects = JSON.parse(localStorage.getItem('approvedProjects') || '[]');
-      const blockchainLedger = JSON.parse(localStorage.getItem('blockchainLedger') || '[]');
-      const userPurchases = JSON.parse(localStorage.getItem('userPurchases') || '[]');
+      // Load real user projects from the correct storage keys
+      const userProjects = JSON.parse(localStorage.getItem('ecoledger_user_projects') || '[]');
+      const approvedProjects = JSON.parse(localStorage.getItem('ecoledger_approved_projects') || '[]');
+      const marketplace = JSON.parse(localStorage.getItem('ecoledger_marketplace') || '[]');
+      const purchases = JSON.parse(localStorage.getItem('ecoledger_purchases') || '[]');
+
+      console.log('📊 Dashboard: Loading projects from storage...');
+      console.log('User Projects:', userProjects.length);
+      console.log('Approved Projects:', approvedProjects.length);
 
       // Transform user projects to dashboard format
-      const transformedProjects = [...userProjects, ...approvedProjects].map(project => ({
+      const allProjects = [...userProjects, ...approvedProjects];
+      const transformedProjects = allProjects.map(project => ({
         id: project.id,
         name: project.projectName || project.name,
         location: project.location,
-        treeCount: project.aiResults?.tree_count || project.treeCount || 0,
+        treeCount: project.claimedTrees || project.treeCount || 0,
         claimedTrees: project.claimedTrees || project.treeCount || 0,
-        finalScore: (project.aiResults?.final_score || 0) / 100,
-        carbonCredits: project.carbonCredits || (project.aiResults?.final_score || 0) * 0.01,
+        finalScore: (project.confidence || 85) / 100,
+        carbonCredits: Math.floor((project.claimedTrees || 0) * 0.5), // 0.5 credits per tree
         status: project.status === 'approved' ? 'Verified' : 
-                project.status === 'pending' ? 'Pending Review' :
+                project.status === 'Pending Verification' ? 'Pending Review' :
                 project.status === 'rejected' ? 'Rejected' : 'Under Review',
-        date: project.submissionDate || project.date || new Date().toISOString().split('T')[0],
+        date: project.submissionDate ? new Date(project.submissionDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         blockchainTx: project.blockchainTx || null,
+        ngoName: project.ngoName,
+        description: project.description,
+        files: project.files || {},
         aiScores: {
-          treeScore: (project.aiResults?.tree_count || 75) / 100,
-          ndviScore: (project.aiResults?.ndvi_score || 0.7),
-          iotScore: (project.aiResults?.IoT_Score || 0.75),
-          auditScore: (project.aiResults?.final_score || 80) / 100
+          treeScore: (project.confidence || 85) / 100,
+          ndviScore: 0.8,
+          iotScore: project.files?.iotData === 'uploaded' ? 0.9 : 0.7,
+          auditScore: (project.confidence || 85) / 100
         }
       }));
 
-      // Fallback to sample data if no real projects exist
-      const sampleProjects = transformedProjects.length > 0 ? transformedProjects : [
-        {
-          id: 'SAMPLE_001',
-          name: 'Sample Mangrove Project',
-          location: 'Demo Location',
-          treeCount: 100,
-          claimedTrees: 100,
-          finalScore: 0.75,
-          carbonCredits: 0.75,
-          status: 'Sample Data',
-          date: new Date().toISOString().split('T')[0],
-          blockchainTx: null,
-          aiScores: {
-            treeScore: 0.8,
-            ndviScore: 0.75,
-            iotScore: 0.7,
-            auditScore: 0.75
-          }
-        }
-      ];
+      // If no projects, show welcome message
+      const projectsToShow = transformedProjects.length > 0 ? transformedProjects : [];
 
       const stats = {
-        totalProjects: sampleProjects.length,
-        totalTrees: sampleProjects.reduce((sum, p) => sum + p.treeCount, 0),
-        totalCredits: sampleProjects.reduce((sum, p) => sum + p.carbonCredits, 0),
-        avgScore: sampleProjects.length > 0 ? 
-          sampleProjects.reduce((sum, p) => sum + p.finalScore, 0) / sampleProjects.length : 0
+        totalProjects: projectsToShow.length,
+        totalTrees: projectsToShow.reduce((sum, p) => sum + p.treeCount, 0),
+        totalCredits: projectsToShow.reduce((sum, p) => sum + p.carbonCredits, 0),
+        avgScore: projectsToShow.length > 0 ? 
+          projectsToShow.reduce((sum, p) => sum + p.finalScore, 0) / projectsToShow.length : 0
       };
 
-      // Generate real activity from recent projects and purchases
+      // Generate activity from recent projects and purchases
       const recentActivity = [];
       
-      // Add recent project activities
-      sampleProjects.slice(0, 3).forEach((project, index) => {
+      // Add recent project activities (most recent first)
+      const recentProjects = projectsToShow.slice(-3).reverse();
+      recentProjects.forEach((project, index) => {
         if (project.status === 'Verified') {
           recentActivity.push({
             type: 'verification',
-            title: 'Project verified successfully',
+            title: `Project "${project.name}" verified successfully`,
             project: project.name,
             timestamp: `${index + 1} ${index === 0 ? 'hour' : 'day'}${index > 0 ? 's' : ''} ago`
           });
         } else if (project.status === 'Pending Review') {
           recentActivity.push({
             type: 'review',
-            title: 'Project submitted for review',
+            title: `Project "${project.name}" submitted for review`,
             project: project.name,
-            timestamp: `${index + 1} day${index > 0 ? 's' : ''} ago`
+            timestamp: `${index === 0 ? 'Just now' : `${index} hour${index > 1 ? 's' : ''} ago`}`
           });
         }
       });
 
       // Add purchase activities
-      userPurchases.slice(0, 2).forEach((purchase: any, index: number) => {
+      purchases.slice(0, 2).forEach((purchase: any, index: number) => {
         recentActivity.push({
           type: 'credits',
-          title: `Purchased ${purchase.amount} carbon credits`,
-          project: purchase.projectName,
+          title: `Purchased ${purchase.amount || 10} carbon credits`,
+          project: purchase.projectName || 'Marketplace',
           timestamp: `${index + 2} day${index > 0 ? 's' : ''} ago`
         });
       });
 
-      // Fallback activity if no real data
+      // Add welcome message if no activity
       if (recentActivity.length === 0) {
         recentActivity.push({
           type: 'info',
           title: 'Welcome to EcoLedger Dashboard',
-          project: 'Upload your first project to get started',
+          project: 'Upload your first mangrove project to get started',
           timestamp: 'now'
         });
       }
 
       setData({
-        projects: sampleProjects,
+        projects: projectsToShow,
         stats,
         recentActivity: recentActivity.slice(0, 5), // Limit to 5 items
         loading: false
       });
 
-      console.log(`📊 Dashboard loaded: ${sampleProjects.length} projects, ${stats.totalTrees} trees, ${stats.totalCredits.toFixed(2)} credits`);
+      console.log(`📊 Dashboard loaded: ${projectsToShow.length} projects, ${stats.totalTrees} trees, ${stats.totalCredits.toFixed(2)} credits`);
 
     } catch (error) {
       console.error('Failed to load dashboard data:', error);

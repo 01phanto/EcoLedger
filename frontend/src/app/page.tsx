@@ -55,6 +55,18 @@ export default function Home() {
               <Upload className="h-5 w-5 mr-2" />
               Start Verification
             </Link>
+            <Link
+              href="/marketplace"
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+            >
+              💰 Carbon Marketplace
+            </Link>
+            <Link
+              href="/admin"
+              className="bg-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-700 transition duration-200 flex items-center justify-center"
+            >
+              🔐 Admin Portal
+            </Link>
           </div>
         </div>
       </main>

@@ -30,68 +30,10 @@ export default function MarketplacePage() {
   }, []);
 
   const loadMarketplaceData = () => {
-    // Load only approved projects from localStorage
-    const approvedListings = JSON.parse(localStorage.getItem('marketplaceListings') || '[]');
-    
-    // Also check for any approved projects that haven't been added to marketplace yet
-    const userProjects = JSON.parse(localStorage.getItem('userProjects') || '[]');
-    const newlyApproved = userProjects.filter(project => 
-      project.status === 'approved' && 
-      !approvedListings.find(listing => listing.ngoId === project.id)
-    );
-
-    // Convert newly approved projects to marketplace format
-    const newListings = newlyApproved.map(project => ({
-      id: `MARKETPLACE_${project.id}`,
-      ngoId: project.id,
-      ngoName: project.ngoName,
-      projectName: project.projectName,
-      location: project.location,
-      creditsAvailable: (project.aiResults?.final_score || 50) / 10, // Convert score to credits
-      pricePerCredit: 15.00 + Math.random() * 10, // Price between $15-25
-      verificationScore: (project.aiResults?.final_score || 50) / 100,
-      vintageYear: new Date().getFullYear(),
-      projectType: 'mangrove_plantation',
-      verificationStandard: 'EcoLedger_AI_v1.0',
-      description: `AI-verified mangrove restoration project with ${project.aiResults?.tree_count || 0} trees planted.`,
-      totalTrees: project.aiResults?.tree_count || 0,
-      co2Absorbed: project.aiResults?.co2_absorbed || 0
-    }));
-
-    // Combine existing and new listings
-    const allListings = [...approvedListings, ...newListings];
-    
-    // Save updated listings
-    if (newListings.length > 0) {
-      localStorage.setItem('marketplaceListings', JSON.stringify(allListings));
-    }
-    
-    // If no real projects, show demo data
-    if (allListings.length === 0) {
-      const defaultListings: CreditListing[] = [
-        {
-          id: 'DEMO_1',
-          ngoId: 'demo_sundarbans',
-          ngoName: 'Demo - Sundarbans Conservation Society',
-          projectName: 'Demo - Sundarbans Mangrove Restoration',
-          location: 'Sundarbans, Bangladesh',
-          creditsAvailable: 125.8,
-          pricePerCredit: 18.50,
-          verificationScore: 0.92,
-          vintageYear: 2024,
-          projectType: 'mangrove_plantation',
-          verificationStandard: 'EcoLedger_AI_v1.0',
-          description: 'Demo project - Large-scale mangrove restoration project.',
-          totalTrees: 3500,
-          co2Absorbed: 1547.0
-        }
-      ];
-      setListings(defaultListings);
-      console.log('📋 No approved projects found, showing demo data');
-    } else {
-      setListings(allListings);
-      console.log(`📋 Loaded ${allListings.length} approved projects in marketplace`);
-    }
+    // Load marketplace listings from our storage system
+    const marketplaceData = JSON.parse(localStorage.getItem('ecoledger_marketplace') || '[]');
+    setListings(marketplaceData);
+    console.log(`📈 Loaded ${marketplaceData.length} marketplace listings for trading`);
   };
 
   const handlePurchase = () => {
@@ -100,52 +42,39 @@ export default function MarketplacePage() {
     const quantity = parseFloat(purchaseAmount);
     const totalCost = quantity * selectedListing.pricePerCredit;
 
-    const purchase = {
-      id: `PURCHASE_${Date.now()}`,
-      marketplaceListingId: selectedListing.id,
-      ngoName: selectedListing.ngoName,
-      projectName: selectedListing.projectName,
-      location: selectedListing.location,
-      creditsQuantity: quantity,
-      pricePerCredit: selectedListing.pricePerCredit,
-      totalAmount: totalCost,
-      purchaseDate: new Date().toISOString(),
-      transactionId: `0xPURCHASE${Date.now()}`,
-      blockNumber: Math.floor(Math.random() * 1000000),
-      status: 'active',
-      carbonOffset: quantity * 12.3
-    };
-
-    const existingPurchases = JSON.parse(localStorage.getItem('userPurchases') || '[]');
-    existingPurchases.push(purchase);
-    localStorage.setItem('userPurchases', JSON.stringify(existingPurchases));
-
+    // Update marketplace (reduce available credits)
     const updatedListings = listings.map(listing => 
       listing.id === selectedListing.id 
         ? { ...listing, creditsAvailable: listing.creditsAvailable - quantity }
         : listing
-    );
+    ).filter(listing => listing.creditsAvailable > 0);
+    
     setListings(updatedListings);
-    localStorage.setItem('marketplaceListings', JSON.stringify(updatedListings));
-
-    const blockchainEntry = {
-      type: 'credit_purchase',
-      id: purchase.id,
-      description: `Purchased ${quantity} credits from ${selectedListing.ngoName}`,
-      credits: quantity,
-      amount: totalCost,
-      date: new Date().toISOString(),
-      transactionId: purchase.transactionId,
-      blockNumber: purchase.blockNumber,
-      ngoName: selectedListing.ngoName,
-      buyer: 'Current User'
+    localStorage.setItem('ecoledger_marketplace', JSON.stringify(updatedListings));
+    
+    // Add to blockchain ledger
+    const blockchainLedger = JSON.parse(localStorage.getItem('ecoledger_blockchain') || '[]');
+    const transactionEntry = {
+      id: `TRADE_${Date.now()}`,
+      type: 'CREDIT_PURCHASE',
+      listingId: selectedListing.id,
+      projectName: selectedListing.projectName,
+      creditsTraded: quantity,
+      totalCost,
+      pricePerCredit: selectedListing.pricePerCredit,
+      timestamp: new Date().toISOString(),
+      transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+      blockNumber: Math.floor(Math.random() * 1000000) + 600000,
+      gasUsed: Math.floor(Math.random() * 30000) + 15000,
+      status: 'confirmed',
+      buyer: 'User',
+      seller: selectedListing.ngoName
     };
-
-    const existingLedger = JSON.parse(localStorage.getItem('blockchainLedger') || '[]');
-    existingLedger.push(blockchainEntry);
-    localStorage.setItem('blockchainLedger', JSON.stringify(existingLedger));
-
-    alert(`✅ Purchase successful! ${quantity} credits for $${totalCost.toFixed(2)}`);
+    
+    blockchainLedger.push(transactionEntry);
+    localStorage.setItem('ecoledger_blockchain', JSON.stringify(blockchainLedger));
+    
+    alert(`🎉 PURCHASE SUCCESSFUL!\n\n� Purchased ${quantity} carbon credits\n💵 Total cost: $${totalCost.toFixed(2)}\n🌱 From: ${selectedListing.projectName}\n🔗 Transaction: ${transactionEntry.transactionHash.substr(0, 20)}...`);
     
     setSelectedListing(null);
     setPurchaseAmount('');
