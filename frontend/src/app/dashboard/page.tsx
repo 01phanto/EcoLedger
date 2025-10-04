@@ -130,7 +130,7 @@ export default function DashboardPage() {
       });
 
       // Add purchase activities
-      userPurchases.slice(0, 2).forEach((purchase, index) => {
+      userPurchases.slice(0, 2).forEach((purchase: any, index: number) => {
         recentActivity.push({
           type: 'credits',
           title: `Purchased ${purchase.amount} carbon credits`,
