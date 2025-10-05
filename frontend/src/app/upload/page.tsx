@@ -404,53 +404,53 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-green-50 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Upload Mangrove Project</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+        <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">Upload Mangrove Project</h1>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">NGO Name *</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">NGO Name *</label>
               <input
                 type="text"
                 name="ngoName"
                 value={formData.ngoName}
                 onChange={handleChange}
                 required
-                className="w-full p-3 border rounded-lg"
+                className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:outline-none transition-all duration-200 placeholder:text-gray-400"
                 placeholder="Your organization name"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Project Name *</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Project Name *</label>
               <input
                 type="text"
                 name="projectName"
                 value={formData.projectName}
                 onChange={handleChange}
                 required
-                className="w-full p-3 border rounded-lg"
+                className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:outline-none transition-all duration-200 placeholder:text-gray-400"
                 placeholder="Project name"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Location *</label>
               <input
                 type="text"
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
                 required
-                className="w-full p-3 border rounded-lg"
+                className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:outline-none transition-all duration-200 placeholder:text-gray-400"
                 placeholder="Project location"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Trees Planted *</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Trees Planted *</label>
               <input
                 type="number"
                 name="claimedTrees"
@@ -458,31 +458,31 @@ export default function UploadPage() {
                 onChange={handleChange}
                 required
                 min="1"
-                className="w-full p-3 border rounded-lg"
+                className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:outline-none transition-all duration-200 placeholder:text-gray-400"
                 placeholder="Number of trees"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Project Description *</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                required
-                rows={4}
-                className="w-full p-3 border rounded-lg"
-                placeholder="Describe your mangrove plantation project"
               />
             </div>
           </div>
           
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Project Description *</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+              rows={4}
+              className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:outline-none transition-all duration-200 placeholder:text-gray-400"
+              placeholder="Describe your mangrove plantation project"
+            />
+          </div>
+          
           <div className="border-t pt-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">📸 Upload Supporting Evidence</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📸 Upload Supporting Evidence</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   Ground-level Images
                 </label>
                 <input
@@ -491,16 +491,16 @@ export default function UploadPage() {
                   onChange={handleChange}
                   multiple
                   accept="image/*"
-                  className="w-full p-3 border rounded-lg"
+                  className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:outline-none transition-all duration-200"
                 />
-                <p className="text-sm text-gray-500 mt-1">Upload photos taken at ground level showing mangroves</p>
+                <p className="text-sm text-gray-600 mt-1">Upload photos taken at ground level showing mangroves</p>
                 {files.groundImages && files.groundImages.length > 0 && (
                   <p className="text-sm text-green-600 mt-1">✓ {files.groundImages.length} files selected</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   Satellite/Aerial Images
                 </label>
                 <input
@@ -509,16 +509,16 @@ export default function UploadPage() {
                   onChange={handleChange}
                   multiple
                   accept="image/*"
-                  className="w-full p-3 border rounded-lg"
+                  className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:outline-none transition-all duration-200"
                 />
-                <p className="text-sm text-gray-500 mt-1">Upload satellite or drone imagery of the plantation area</p>
+                <p className="text-sm text-gray-600 mt-1">Upload satellite or drone imagery of the plantation area</p>
                 {files.satelliteImages && files.satelliteImages.length > 0 && (
                   <p className="text-sm text-green-600 mt-1">✓ {files.satelliteImages.length} files selected</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   IoT Sensor Data (CSV) - Optional
                 </label>
                 <input
@@ -526,9 +526,9 @@ export default function UploadPage() {
                   name="iotData"
                   onChange={handleChange}
                   accept=".csv"
-                  className="w-full p-3 border rounded-lg"
+                  className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:outline-none transition-all duration-200"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   Upload CSV file with IoT sensor data (timestamp, soil_moisture, temperature, salinity, ph, dissolved_oxygen)
                 </p>
                 {files.iotData && (
@@ -541,7 +541,7 @@ export default function UploadPage() {
           <div className="text-center">
             <button
               type="submit"
-              className="px-8 py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700"
+              className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
             >
               Submit for Verification
             </button>

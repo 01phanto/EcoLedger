@@ -10,6 +10,19 @@ import uuid
 from datetime import datetime
 import logging
 import os
+from pathlib import Path
+
+try:
+    # Import the Fabric wrapper if available
+    from ....blockchain.fabric_service import FabricService, FabricServiceError
+    FABRIC_AVAILABLE = True
+except Exception:
+    # Fallback to top-level import path
+    try:
+        from blockchain.fabric_service import FabricService, FabricServiceError
+        FABRIC_AVAILABLE = True
+    except Exception:
+        FABRIC_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -184,19 +197,52 @@ class LedgerService:
             # Calculate hash
             credit_record["hash"] = self._calculate_hash(credit_record)
             
-            # Store credit record
+            # Attempt to store on-chain via FabricService if available
+            onchain_result = None
+            try:
+                if FABRIC_AVAILABLE:
+                    fabric = FabricService()
+                    # Prepare payload for chaincode
+                    payload = {
+                        'creditId': credit_id,
+                        'projectId': credit_data.get('project_id'),
+                        'ngoName': credit_data.get('ngo_id'),
+                        'credits': credits_amount,
+                        'verificationScore': credit_data.get('verification_score', 0),
+                        'timestamp': credit_record['issued_at'],
+                        'metadata': credit_data.get('metadata', {})
+                    }
+                    onchain_result = fabric.issue_credits(payload)
+                    # If successful and contains txId or creditId, persist
+                    credit_record['onchain'] = True
+                    credit_record['onchain_result'] = onchain_result
+                    credit_record['status'] = 'issued_on_chain'
+                else:
+                    credit_record['onchain'] = False
+                    credit_record['status'] = 'issued_local'
+
+            except Exception as e:
+                # If Fabric submission fails, mark as pending and log error
+                logger.error(f"Fabric submission failed for credit {credit_id}: {e}")
+                credit_record['onchain'] = False
+                credit_record['onchain_error'] = str(e)
+                credit_record['status'] = 'pending_on_chain'
+
+            # Store credit record (always store locally for audit and recovery)
             if self.use_mongodb:
                 self.credits_collection.insert_one(credit_record)
             else:
                 self._append_to_file(self.credits_file, credit_record)
-            
-            logger.info(f"Issued {credits_amount} credits to NGO {ngo_id}")
-            
+
+            logger.info(f"Issued {credits_amount} credits to NGO {ngo_id} (credit_id={credit_id}) status={credit_record['status']}")
+
             return {
                 "status": "success",
                 "credit_id": credit_id,
                 "credits_issued": credits_amount,
-                "blockchain_hash": credit_record["hash"]
+                "onchain": credit_record.get('onchain', False),
+                "onchain_result": credit_record.get('onchain_result', None),
+                "error": credit_record.get('onchain_error', None)
             }
             
         except Exception as e:

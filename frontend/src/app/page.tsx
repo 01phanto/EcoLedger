@@ -26,7 +26,7 @@ export default function Home() {
               <Link href="/admin" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md">
                 Admin
               </Link>
-              <Link href="/buyer" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md">
+              <Link href="/portfolio" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md">
                 Portfolio
               </Link>
               <Link href="/ledger" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md">

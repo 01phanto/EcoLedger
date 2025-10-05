@@ -9,16 +9,20 @@ import os
 import json
 from datetime import datetime
 import logging
+from flask_socketio import SocketIO
 
-# Import AI model modules
-from ai_models.yolo_detection import TreeDetectionAPI
-from ai_models.ndvi_analysis import NDVIAnalysisAPI
-from ai_models.iot_processing import IoTProcessingAPI
-from ai_models.co2_estimator import CO2EstimatorAPI
-from ai_models.final_score import FinalScoreAPI
+# Import AI model modules (commented out for demo)
+# from ai_models.yolo_detection import TreeDetectionAPI
+# from ai_models.ndvi_analysis import NDVIAnalysisAPI
+# from ai_models.iot_processing import IoTProcessingAPI
+# from ai_models.co2_estimator import CO2EstimatorAPI
+# from ai_models.final_score import FinalScoreAPI
 
 # Import blockchain module
-from blockchain.ledger_service import LedgerService
+try:
+    from blockchain.ledger_service import LedgerService
+except ImportError:
+    LedgerService = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,15 +39,28 @@ CORS(app, origins=[
     "*"                           # Allow all origins for demo
 ])
 
-# Initialize AI model APIs
-tree_detector = TreeDetectionAPI()
-ndvi_analyzer = NDVIAnalysisAPI()
-iot_processor = IoTProcessingAPI()
-co2_estimator = CO2EstimatorAPI()
-final_scorer = FinalScoreAPI()
+# Initialize Socket.IO for real-time notifications
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Initialize AI model APIs (mock for demo)
+# tree_detector = TreeDetectionAPI()
+# ndvi_analyzer = NDVIAnalysisAPI()
+# iot_processor = IoTProcessingAPI()
+# co2_estimator = CO2EstimatorAPI()
+# final_scorer = FinalScoreAPI()
 
 # Initialize blockchain service
-ledger_service = LedgerService()
+if LedgerService:
+    ledger_service = LedgerService()
+else:
+    ledger_service = None
+
+# Optional Fabric wrapper (top-level blockchain integration)
+try:
+    from blockchain.fabric_service import FabricService, FabricServiceError
+    fabric_service = FabricService()
+except Exception:
+    fabric_service = None
 
 # Configure upload settings
 UPLOAD_FOLDER = 'uploads'
@@ -57,16 +74,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        "status": "healthy",
-        "service": "EcoLedger API",
-        "version": "1.0.0",
-        "timestamp": datetime.now().isoformat()
-    })
 
 @app.route('/treecount', methods=['POST'])
 def tree_count_endpoint():
@@ -225,6 +232,19 @@ def ledger_issue_credits():
             }), 400
         
         result = ledger_service.issue_credits(data)
+
+        # Emit real-time update if issued (on-chain or local)
+        try:
+            event_payload = {
+                'credit_id': result.get('credit_id'),
+                'credits_issued': result.get('credits_issued'),
+                'onchain': result.get('onchain', False),
+                'onchain_result': result.get('onchain_result')
+            }
+            socketio.emit('CREDIT_ISSUED', event_payload, namespace='/')
+        except Exception as e:
+            logger.warning(f"Socket emit failed: {e}")
+
         return jsonify(result)
     
     except Exception as e:
@@ -359,6 +379,66 @@ def get_reports():
         logger.error(f"Reports endpoint error: {str(e)}")
         return jsonify({"error": "Failed to fetch reports", "details": str(e)}), 500
 
+# Health Check Endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for monitoring and load balancers"""
+    try:
+        # Check database connection (if available)
+        db_status = "unavailable"
+        if globals().get('db_service'):
+            try:
+                db_status = "healthy"
+            except Exception:
+                db_status = "unhealthy"
+
+        # Check blockchain service
+        blockchain_status = "healthy" if globals().get('ledger_service') else "unavailable"
+
+        # Check AI service
+        ai_status = "healthy" if globals().get('tree_detector') else "unavailable"
+
+        # Check WebSocket service
+        websocket_status = "healthy" if globals().get('socketio') else "unavailable"
+        
+        # Overall health
+        overall_status = "healthy"
+        if db_status == "unhealthy":
+            overall_status = "unhealthy"
+        elif blockchain_status == "unavailable":
+            overall_status = "degraded"
+        
+        return jsonify({
+            "status": overall_status,
+            "timestamp": datetime.now().isoformat(),
+            "services": {
+                "database": db_status,
+                "blockchain": blockchain_status,
+                "ai_orchestrator": ai_status,
+                "websocket": websocket_status
+            },
+            "version": "1.0.0",
+            "environment": "development"
+        }), 200 if overall_status == "healthy" else 503
+        
+    except Exception as e:
+        logger.error(f"Health check error: {str(e)}")
+        return jsonify({
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }), 503
+
+@app.route('/', methods=['GET'])
+def root():
+    """Root endpoint - simple health check"""
+    return jsonify({
+        "status": "healthy",
+        "service": "EcoLedger API",
+        "version": "1.0.0",
+        "timestamp": datetime.now().isoformat()
+    })
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Endpoint not found"}), 404
@@ -368,8 +448,8 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    # Development server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Development server with Socket.IO
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
 else:
     # Production server (Gunicorn will use this)
     # Configure for production

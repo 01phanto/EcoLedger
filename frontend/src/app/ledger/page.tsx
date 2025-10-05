@@ -39,7 +39,80 @@ export default function BlockchainLedger() {
 
   const loadBlockchainData = () => {
     // Load transactions from localStorage
-    const ledgerData = JSON.parse(localStorage.getItem('blockchainLedger') || '[]');
+    let ledgerData = JSON.parse(localStorage.getItem('blockchainLedger') || '[]');
+    
+    // If no data exists, add sample transaction data
+    if (ledgerData.length === 0) {
+      const sampleTransactions = [
+        {
+          type: 'project_approval',
+          id: 'TXN_001',
+          description: 'Mangrove Trust Foundation - Sundarbans Restoration Phase 1 approved',
+          credits: 54.1,
+          date: '2024-09-15T10:30:00Z',
+          transactionId: '0xabc123...def456',
+          blockNumber: 1001,
+          ngoName: 'Mangrove Trust Foundation',
+          location: 'Bangladesh',
+          status: 'Verified'
+        },
+        {
+          type: 'project_approval',
+          id: 'TXN_002',
+          description: 'Ocean Guardians - Coastal Protection Initiative approved',
+          credits: 32.8,
+          date: '2024-09-20T14:15:00Z',
+          transactionId: '0x789abc...123def',
+          blockNumber: 1002,
+          ngoName: 'Ocean Guardians',
+          location: 'Philippines',
+          status: 'Verified'
+        },
+        {
+          type: 'credit_purchase',
+          id: 'TXN_003',
+          description: 'EcoTech Corp purchased 25 carbon credits',
+          credits: 25,
+          amount: 1250,
+          buyer: 'EcoTech Corp',
+          seller: 'Mangrove Trust Foundation',
+          date: '2024-09-25T16:45:00Z',
+          transactionId: '0x456def...789abc',
+          blockNumber: 1003,
+          ngoName: 'Mangrove Trust Foundation'
+        },
+        {
+          type: 'credit_purchase',
+          id: 'TXN_004',
+          description: 'Green Solutions Ltd purchased 15 carbon credits',
+          credits: 15,
+          amount: 750,
+          buyer: 'Green Solutions Ltd',
+          seller: 'Ocean Guardians',
+          date: '2024-10-01T09:20:00Z',
+          transactionId: '0x654321...098765',
+          blockNumber: 1004,
+          ngoName: 'Ocean Guardians'
+        },
+        {
+          type: 'project_approval',
+          id: 'TXN_005',
+          description: 'Coastal Care Foundation - Mangrove Ecosystem Restoration approved',
+          credits: 47.3,
+          date: '2024-10-03T11:30:00Z',
+          transactionId: '0x111222...333444',
+          blockNumber: 1005,
+          ngoName: 'Coastal Care Foundation',
+          location: 'Indonesia',
+          status: 'Verified'
+        }
+      ];
+      
+      // Save sample data to localStorage
+      localStorage.setItem('blockchainLedger', JSON.stringify(sampleTransactions));
+      ledgerData = sampleTransactions;
+    }
+    
     setTransactions(ledgerData.sort((a: BlockchainEntry, b: BlockchainEntry) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
     ));

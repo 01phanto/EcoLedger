@@ -1,38 +1,109 @@
 version: '3.8'
 
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecoledger_db
+    environment:
+      POSTGRES_DB: ecoledger
+      POSTGRES_USER: ecoledger_user
+      POSTGRES_PASSWORD: ecoledger_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecoledger_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecoledger_user -d ecoledger"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and WebSocket sessions
+  redis:
+    image: redis:7-alpine
+    container_name: ecoledger_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecoledger_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend Flask Application
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile.backend
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ecoledger_backend
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://ecoledger_user:ecoledger_password@postgres:5432/ecoledger
+      - REDIS_URL=redis://redis:6379/0
+      - WEBSOCKET_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
+      - CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+      - SECRET_KEY=development-secret-key
+      - JWT_SECRET_KEY=development-jwt-secret
     ports:
       - "5000:5000"
     volumes:
-      - ./uploads:/app/uploads
+      - ./backend:/app
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+      - backend_models:/app/models
       - ./outputs:/app/outputs
-    environment:
-      - FLASK_ENV=production
-      - UPLOAD_FOLDER=uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
-      - ecoledger-network
+      - ecoledger_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
+  # Frontend Next.js Application
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: ecoledger_frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:5000
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://backend:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
-      - ecoledger-network
-
-networks:
-  ecoledger-network:
-    driver: bridge
+      - ecoledger_network
+    restart: unless-stopped
 
 volumes:
+  postgres_data:
+  redis_data:
+  backend_uploads:
+  backend_logs:
+  backend_models:
   uploads:
   outputs:
+
+networks:
+  ecoledger_network:
+    driver: bridge
