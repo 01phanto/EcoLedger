@@ -66,46 +66,46 @@ export default function PortfolioPage() {
     
     // If no user transactions exist, add sample data
     if (userTransactions.length === 0) {
-      const sampleUserTransactions = [
+      const sampleUserTransactions: Transaction[] = [
         {
           id: 'UTX_001',
-          type: 'purchase',
+          type: 'purchase' as const,
           credits: 25,
           price: 50,
           total: 1250,
           counterparty: 'Mangrove Trust Foundation',
           date: '2024-09-25T16:45:00Z',
-          status: 'completed'
+          status: 'completed' as const
         },
         {
           id: 'UTX_002',
-          type: 'purchase',
+          type: 'purchase' as const,
           credits: 15,
           price: 45,
           total: 675,
           counterparty: 'Ocean Guardians',
           date: '2024-10-01T09:20:00Z',
-          status: 'completed'
+          status: 'completed' as const
         },
         {
           id: 'UTX_003',
-          type: 'sale',
+          type: 'sale' as const,
           credits: 10,
           price: 55,
           total: 550,
           counterparty: 'EcoTech Corp',
           date: '2024-10-02T14:30:00Z',
-          status: 'completed'
+          status: 'completed' as const
         },
         {
           id: 'UTX_004',
-          type: 'purchase',
+          type: 'purchase' as const,
           credits: 20,
           price: 48,
           total: 960,
           counterparty: 'Coastal Care Foundation',
           date: '2024-10-03T11:15:00Z',
-          status: 'completed'
+          status: 'completed' as const
         }
       ];
       
@@ -286,7 +286,7 @@ export default function PortfolioPage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"

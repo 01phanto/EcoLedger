@@ -1,0 +1,31 @@
+{
+  "name": "ecoledger",
+  "version": "1.0.0",
+  "description": "Blockchain-powered mangrove carbon credit verification platform",
+  "homepage": "https://01phanto.github.io/EcoLedger",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/01phanto/EcoLedger.git"
+  },
+  "scripts": {
+    "deploy": "cd frontend && npm run build && npm run export",
+    "start": "cd frontend && npm run dev",
+    "backend": "cd backend && python simple_main.py",
+    "full-stack": "concurrently \"npm run backend\" \"npm run start\""
+  },
+  "dependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "keywords": [
+    "blockchain",
+    "carbon-credits",
+    "mangrove",
+    "ai",
+    "yolov8",
+    "ndvi",
+    "hyperledger-fabric",
+    "environmental-monitoring"
+  ],
+  "author": "01phanto",
+  "license": "MIT"
+}
