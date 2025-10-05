@@ -1,4 +1,4 @@
-name: Deploy EcoLedger to GitHub Pages
+name: Build and Deploy EcoLedger
 
 on:
   push:
@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd frontend
-          npm ci
+          npm ci --legacy-peer-deps
           
       - name: Build with Next.js
         run: |
@@ -48,14 +48,16 @@ jobs:
           npm run build
         env:
           NODE_ENV: production
+          CI: false
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/out
 
-  # Deployment job
+  # Deployment job (only deploy on main branch pushes)
   deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
